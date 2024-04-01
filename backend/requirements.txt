@@ -1,0 +1,8 @@
+django
+pytz
+uuid
+djangorestframework
+markdown
+django-filter
+drf-yasg
+django-rest-swagger
