@@ -1,0 +1,3 @@
+EMAIL_USER = 'support@flirtsy.com'
+EMAIL_PASS = '123456'
+EMAIL_FROM = 'support@flirtsy.com'

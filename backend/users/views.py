@@ -1,90 +1,68 @@
-from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib.auth.hashers import make_password, check_password
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.views import APIView
+from .serializers import SendPasswordResetEmailSerializer, UserChangePasswordSerializer, UserLoginSerializer, UserPasswordResetSerializer, UserProfileSerializer, UserRegistrationSerializer
+from django.contrib.auth import authenticate
+from .renderers import UserRenderer
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated
 
-from .serializers import *
-from .models import *
-from django.http import Http404, HttpResponse
-# from django.views.decorators.csrf import csrf_exempt
-from rest_framework import generics, response
+# Generate Token Manually
+def get_tokens_for_user(user):
+  refresh = RefreshToken.for_user(user)
+  return {
+      'refresh': str(refresh),
+      'access': str(refresh.access_token),
+  }
 
+class UserRegistrationView(APIView):
+  renderer_classes = [UserRenderer]
+  def post(self, request, format=None):
+    serializer = UserRegistrationSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    user = serializer.save()
+    token = get_tokens_for_user(user)
+    return Response({'token':token, 'msg':'Registration Successful'}, status=status.HTTP_201_CREATED)
 
-# def loginUser(request):
-#     try:
-#         user = get_object_or_404(User, email=request.POST['email'])
-#         email = request.POST['email']
-#         password = request.POST['password']
-#         password = make_password(password)
-#         check = check_password(user.password,password)
-#         if check == False:
-#             return HttpResponse("Invalid Password")
-#         else:
-#             request.session['userId'] = user.id
-#     except Http404:
-#         return HttpResponse("You are logged in")
+class UserLoginView(APIView):
+  renderer_classes = [UserRenderer]
+  def post(self, request, format=None):
+    serializer = UserLoginSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    email = serializer.data.get('email')
+    password = serializer.data.get('password')
+    user = authenticate(email=email, password=password)
+    if user is not None:
+      token = get_tokens_for_user(user)
+      return Response({'token':token, 'msg':'Login Success'}, status=status.HTTP_200_OK)
+    else:
+      return Response({'errors':{'non_field_errors':['Email or Password is not Valid']}}, status=status.HTTP_404_NOT_FOUND)
 
-# def logout(request):
-#     if 'userId' in request.session:
-#         del request.session['userId']
-#         return HttpResponse("You are logged Out")
-#     else:
-#         return HttpResponse("Login First")
+class UserProfileView(APIView):
+  renderer_classes = [UserRenderer]
+  permission_classes = [IsAuthenticated]
+  def get(self, request, format=None):
+    serializer = UserProfileSerializer(request.user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
+class UserChangePasswordView(APIView):
+  renderer_classes = [UserRenderer]
+  permission_classes = [IsAuthenticated]
+  def post(self, request, format=None):
+    serializer = UserChangePasswordSerializer(data=request.data, context={'user':request.user})
+    serializer.is_valid(raise_exception=True)
+    return Response({'msg':'Password Changed Successfully'}, status=status.HTTP_200_OK)
 
-# def registerUser(request): 
-#     try:
-#         user = get_object_or_404(User, email=request.POST['email'])
-#         return HttpResponse("User Exists")
-#     except Http404:
-#         em = request.POST['email']
-#         pa = request.POST['password']
-#         pa = make_password(pa)
-#         user = User.objects.create(email = em, password = pa)
-#         user.save()
-#         return HttpResponse("Registered Successfully")
+class SendPasswordResetEmailView(APIView):
+  renderer_classes = [UserRenderer]
+  def post(self, request, format=None):
+    serializer = SendPasswordResetEmailSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    return Response({'msg':'Password Reset link send. Please check your Email'}, status=status.HTTP_200_OK)
 
-
-# def deleteUser(request, user_id):
-#     try:
-#         user = get_object_or_404(User, id=user_id)
-#         if request.method == 'POST':
-#             user.delete()
-#             return HttpResponse("User deleted")
-#     except Http404:
-#         return HttpResponse("User not found")
-
-
-# def create_user_profile(data):
-#     user_profile = UserProfile.objects.create(
-#         user=data['user'],
-#         name=data['name'],
-#         gender=data['gender'],
-#         dob=data['dob'],
-#         profilePicture=data['profilePicture'],
-#         bio=data.get('bio', None),
-#         document=data['document'],
-#         selfie=data['selfie']
-#     )
-#     return HttpResponse("Created Successfully")
-
-
-class UserProfileAPIView(generics.ListAPIView):
-    serializer_class = UserProfileSerializer
-
-    def get_queryset(self):
-        return UserProfile.objects.all()
-    
-class UserAPIUpdate(generics.UpdateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    lookup_field = 'id'
-    def update(self, request, *args, **kwargs):
-       instance = self.get_object()
-       serializer = self.get_serializer(instance, data=request.data, partial=True)
-
-       if serializer.is_valid():
-           serializer.save()
-           return response.Response({"message": "mobile number updated successfully"})
-
-       else:
-           return response.Response({"message": "failed", "details": serializer.errors})
-    
+class UserPasswordResetView(APIView):
+  renderer_classes = [UserRenderer]
+  def post(self, request, uid, token, format=None):
+    serializer = UserPasswordResetSerializer(data=request.data, context={'uid':uid, 'token':token})
+    serializer.is_valid(raise_exception=True)
+    return Response({'msg':'Password Reset Successfully'}, status=status.HTTP_200_OK)

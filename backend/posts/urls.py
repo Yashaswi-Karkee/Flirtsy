@@ -1,6 +1,6 @@
 from django.urls import path, include
 
-from posts import views
+# from .views import 
 
 
 # urlpatterns = [

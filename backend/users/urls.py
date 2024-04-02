@@ -1,13 +1,11 @@
-from django.urls import path, include
-
-from users import views
-from .views import *
-
-
+from django.urls import path
+from .views import SendPasswordResetEmailView, UserChangePasswordView, UserLoginView, UserProfileView, UserRegistrationView, UserPasswordResetView
 urlpatterns = [
-    # path('login/',views.loginUser,name='login.user'),
-    # path('logout/',views.logout,name='login.user'),
-    # path('register/',views.registerUser,name='register.user')
-    path('showUser/', UserProfileAPIView.as_view(), name="show.users.profile"),
-    path('update-user/<uuid:id>/', UserAPIUpdate.as_view(), name="update.users"),
+    path('register/', UserRegistrationView.as_view(), name='register'),
+    path('login/', UserLoginView.as_view(), name='login'),
+    path('profile/', UserProfileView.as_view(), name='profile'),
+    path('changepassword/', UserChangePasswordView.as_view(), name='changepassword'),
+    path('send-reset-password-email/', SendPasswordResetEmailView.as_view(), name='send-reset-password-email'),
+    path('reset-password/<uid>/<token>/', UserPasswordResetView.as_view(), name='reset-password'),
+
 ]
