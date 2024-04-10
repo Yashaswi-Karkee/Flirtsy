@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',
     'corsheaders',
+    'channels',
     'rest_framework_simplejwt',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -99,6 +100,20 @@ SWAGGER_SETTINGS = {
         }
     }
 }
+
+CSP_CONNECT_SRC = ("'self'", "ws://localhost:8000")
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 8000)],
+        },
+    },
+}
+
+ASGI_APPLICATION = 'backend.asgi.application'
+
 
 # JWT Configuration
 REST_FRAMEWORK = {
