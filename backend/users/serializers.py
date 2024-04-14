@@ -4,9 +4,11 @@ from django.utils.encoding import smart_str, force_bytes, DjangoUnicodeDecodeErr
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from .utils import Util
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-  # We are writing this becoz we need confirm password field in our Registratin Request
+  # We are writing this becoz we need confirm password field in our Registration Request
   password2 = serializers.CharField(style={'input_type':'password'}, write_only=True)
   class Meta:
     model = User
@@ -54,31 +56,40 @@ class UserChangePasswordSerializer(serializers.Serializer):
     return attrs
 
 class SendPasswordResetEmailSerializer(serializers.Serializer):
-  email = serializers.EmailField(max_length=255)
-  class Meta:
-    fields = ['email']
+    email = serializers.EmailField(max_length=255)
 
-  def validate(self, attrs):
-    email = attrs.get('email')
-    if User.objects.filter(email=email).exists():
-      user = User.objects.get(email = email)
-      uid = urlsafe_base64_encode(force_bytes(user.id))
-      print('Encoded UID', uid)
-      token = PasswordResetTokenGenerator().make_token(user)
-      print('Password Reset Token', token)
-      link = 'http://localhost:8000/api/user/reset-passsword/'+uid+'/'+token+'/'
-      print('Password Reset Link', link)
-      # Send EMail
-      body = 'Click Following Link to Reset Your Password '+link
-      data = {
-        'subject':'Reset Your Password',
-        'body':body,
-        'to_email':user.email
-      }
-      Util.send_email(data)
-      return attrs
-    else:
-      raise serializers.ValidationError('You are not a Registered User')
+    def validate(self, attrs):
+        email = attrs.get('email')
+        if User.objects.filter(email=email).exists():
+            user = User.objects.get(email=email)
+            uid = urlsafe_base64_encode(force_bytes(user.id))
+            print('Encoded UID', uid)
+            token = PasswordResetTokenGenerator().make_token(user)
+            print('Password Reset Token', token)
+            link = 'http://localhost:3000/auth/password-reset/'+uid+'/'+token+'/'
+
+            # Render email body from template
+            context = {
+                'user': user,
+                'reset_link': link,
+            }
+            html_body = render_to_string('password_reset_email.html', context)  # Render HTML template
+
+            # Plain text version of the email
+            text_body = f"Hello user,\n\nClick the following link to reset your password: {link}\n\nSincerely,\nYour Website Team"
+
+            # Send EMail with both plain text and HTML versions
+            msg = EmailMultiAlternatives(
+                subject='Reset Your Password',
+                body=text_body,
+                to=[user.email],
+            )
+            msg.attach_alternative(html_body, "text/html")  # Attach HTML content as an alternative
+            msg.send()
+
+            return attrs
+        else:
+            raise serializers.ValidationError('You are not a Registered User')
 
 class UserPasswordResetSerializer(serializers.Serializer):
   password = serializers.CharField(max_length=255, style={'input_type':'password'}, write_only=True)
@@ -95,6 +106,7 @@ class UserPasswordResetSerializer(serializers.Serializer):
       if password != password2:
         raise serializers.ValidationError("Password and Confirm Password doesn't match")
       id = smart_str(urlsafe_base64_decode(uid))
+      print(id)
       user = User.objects.get(id=id)
       if not PasswordResetTokenGenerator().check_token(user, token):
         raise serializers.ValidationError('Token is not Valid or Expired')
@@ -105,3 +117,26 @@ class UserPasswordResetSerializer(serializers.Serializer):
       PasswordResetTokenGenerator().check_token(user, token)
       raise serializers.ValidationError('Token is not Valid or Expired')
   
+class UpdatePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(max_length=255, write_only=True)
+    new_password = serializers.CharField(max_length=255, write_only=True)
+    confirm_password = serializers.CharField(max_length=255, write_only=True)
+
+    def validate(self, attrs):
+        user = self.context['request'].user
+        current_password = attrs.get('current_password')
+        new_password = attrs.get('new_password')
+        confirm_password = attrs.get('confirm_password')
+
+        if not user.check_password(current_password):
+            raise serializers.ValidationError("Current password is incorrect")
+
+        if new_password != confirm_password:
+            raise serializers.ValidationError("New password and confirm password do not match")
+
+        return attrs
+
+    def save(self):
+        user = self.context['request'].user
+        user.set_password(self.validated_data['new_password'])
+        user.save()

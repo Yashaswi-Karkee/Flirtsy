@@ -1,33 +1,55 @@
 "use client"
 
-import { Fragment } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
-import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, XMarkIcon, BellIcon } from '@heroicons/react/24/outline'
 import { PlusIcon } from '@heroicons/react/20/solid'
+import { useRouter } from 'next/navigation'
+import axios from 'axios'
+import { toast } from 'react-toastify'
+import {logout, origin_url} from "../api/authenticationAPI"
 
-const user = {
-  name: 'Tom Cook',
-  email: 'tom@example.com',
-  imageUrl:
-    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-}
-const navigation = [
-    { name: 'Dashboard', href: '#', current: true },
-    { name: 'Team', href: '#', current: false },
-    { name: 'Projects', href: '#', current: false },
-    { name: 'Calendar', href: '#', current: false },
-]
-const userNavigation = [
-    { name: 'Your Profile', href: '#' },
-    { name: 'Settings', href: '#' },
-    { name: 'Sign out', href: '#' },
-]
 
 function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(' ')
 }
 
-export default function Example() {
+
+export default function NavBar(userData:any) {
+  const router = useRouter()
+  const [currentItem, setCurrentItem] = useState('Dashboard') // Initialize with the default item
+  console.log(origin_url+userData.userData.profilePicture)
+  console.log(userData.userData)
+  const user = {
+    name: userData.userData.name,
+    bio: userData.userData.bio,
+    imageUrl:
+      origin_url + userData.userData.profilePicture,
+  }
+
+  const navigation = [
+      { name: 'Dashboard', action: ()=> { setCurrentItem('Dashboard'); router.push('/dashboard'); }, current: currentItem === 'Dashboard' },
+      { name: 'Post', action: ()=> { setCurrentItem('Post'); router.push('/dashboard/posts'); }, current: currentItem === 'Post' },
+      { name: 'Chat', action: ()=> { setCurrentItem('Chat'); router.push('/dashboard/chat'); }, current: currentItem === 'Chat' },
+  ]
+
+  async function signOut()
+  {
+    if(await logout()){
+      router.push('auth/login')
+    }
+    else{
+      toast("Error Logging out!")
+    }
+  }
+
+  
+  const userNavigation = [
+      { name: 'Your Profile', action: () => router.push('/dashboard/myProfile') },
+      { name: 'Settings', action: () => router.push('/dashboard/setting') },
+      { name: 'Sign out', action: signOut},
+  ]
+
   return (
     <Disclosure as="nav" className="bg-gray-800">
       {({ open }) => (
@@ -56,9 +78,9 @@ export default function Example() {
                 </div>
                 <div className="hidden md:ml-6 md:flex md:items-center md:space-x-4">
                   {navigation.map((item) => (
-                    <a
+                    <button
                       key={item.name}
-                      href={item.href}
+                      onClick={item.action}
                       className={classNames(
                         item.current ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white',
                         'rounded-md px-3 py-2 text-sm font-medium'
@@ -66,20 +88,11 @@ export default function Example() {
                       aria-current={item.current ? 'page' : undefined}
                     >
                       {item.name}
-                    </a>
+                    </button>
                   ))}
                 </div>
               </div>
               <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <button
-                    type="button"
-                    className="relative inline-flex items-center gap-x-1.5 rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-                  >
-                    <PlusIcon className="-ml-0.5 h-5 w-5" aria-hidden="true" />
-                    New Job
-                  </button>
-                </div>
                 <div className="hidden md:ml-4 md:flex md:flex-shrink-0 md:items-center">
                   <button
                     type="button"
@@ -87,7 +100,7 @@ export default function Example() {
                   >
                     <span className="absolute -inset-1.5" />
                     <span className="sr-only">View notifications</span>
-                    <BellIcon className="h-6 w-6" aria-hidden="true" />
+                    {/* <BellIcon className="h-6 w-6" aria-hidden="true" /> */}
                   </button>
 
                   {/* Profile dropdown */}
@@ -108,19 +121,19 @@ export default function Example() {
                       leaveFrom="transform opacity-100 scale-100"
                       leaveTo="transform opacity-0 scale-95"
                     >
-                      <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      <Menu.Items className="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                         {userNavigation.map((item) => (
                           <Menu.Item key={item.name}>
                             {({ active }) => (
-                              <a
-                                href={item.href}
+                              <button
+                                onClick={item.action}
                                 className={classNames(
                                   active ? 'bg-gray-100' : '',
-                                  'block px-4 py-2 text-sm text-gray-700'
+                                  'block py-2 px-4 text-sm text-gray-700 w-full text-left'
                                 )}
                               >
                                 {item.name}
-                              </a>
+                              </button>
                             )}
                           </Menu.Item>
                         ))}
@@ -138,7 +151,7 @@ export default function Example() {
                 <Disclosure.Button
                   key={item.name}
                   as="a"
-                  href={item.href}
+                  onClick={item.action}
                   className={classNames(
                     item.current ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white',
                     'block rounded-md px-3 py-2 text-base font-medium'
@@ -156,7 +169,7 @@ export default function Example() {
                 </div>
                 <div className="ml-3">
                   <div className="text-base font-medium text-white">{user.name}</div>
-                  <div className="text-sm font-medium text-gray-400">{user.email}</div>
+                  <div className="text-sm font-medium text-gray-400">{user.bio}</div>
                 </div>
                 <button
                   type="button"
@@ -164,7 +177,6 @@ export default function Example() {
                 >
                   <span className="absolute -inset-1.5" />
                   <span className="sr-only">View notifications</span>
-                  <BellIcon className="h-6 w-6" aria-hidden="true" />
                 </button>
               </div>
               <div className="mt-3 space-y-1 px-2 sm:px-3">
@@ -172,7 +184,7 @@ export default function Example() {
                   <Disclosure.Button
                     key={item.name}
                     as="a"
-                    href={item.href}
+                    onClick={item.action}
                     className="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white"
                   >
                     {item.name}

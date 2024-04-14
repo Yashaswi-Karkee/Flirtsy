@@ -1,18 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/router";
-
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import axios from "axios";
+import { toast } from "react-toastify";
+import {login} from "../../../api/authenticationAPI"
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // const router = useRouter();
+  const router = useRouter();
 
-  const handleLogin = () => {
-    // Perform login logic here
-    // You can use email and password state variables to send login request to your backend API
-    // Redirect to dashboard page after successful login
-    // router.push('/components/login');
+  const handleLogin = async (e: any) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('password', password);
+    if(await login(formData)){
+      router.push("/dashboard");
+    }
+    else{
+      toast("Error logging in");
+    }
   };
 
   return (
@@ -29,7 +38,7 @@ const LoginPage = () => {
       </div>
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-        <form className="space-y-6" action="#" method="POST">
+        <form className="space-y-6" onSubmit={handleLogin} method="POST">
           <div>
             <label
               htmlFor="email"
@@ -44,6 +53,7 @@ const LoginPage = () => {
                 type="email"
                 autoComplete="email"
                 required
+                onChange={(e) => setEmail(e.target.value)}
                 className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
               />
             </div>
@@ -58,12 +68,12 @@ const LoginPage = () => {
                 Password
               </label>
               <div className="text-sm">
-                <a
-                  href="#"
+                <Link
+                  href="/auth/password-reset-email"
                   className="font-semibold text-indigo-600 hover:text-indigo-500"
                 >
                   Forgot password?
-                </a>
+                </Link>
               </div>
             </div>
             <div className="mt-2">
@@ -73,6 +83,7 @@ const LoginPage = () => {
                 type="password"
                 autoComplete="current-password"
                 required
+                onChange={(e) => setPassword(e.target.value)}
                 className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
               />
             </div>
@@ -90,12 +101,12 @@ const LoginPage = () => {
 
         <p className="mt-10 text-center text-sm text-gray-500">
           Not a member?{" "}
-          <a
-            href="#"
+          <button
+            onClick={() => router.push("/auth/register")}
             className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500"
           >
             Register here
-          </a>
+          </button>
         </p>
       </div>
     </div>

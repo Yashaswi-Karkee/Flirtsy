@@ -1,12 +1,15 @@
 from rest_framework.response import Response
 from rest_framework import status,generics
 from rest_framework.views import APIView
-from .serializers import SendPasswordResetEmailSerializer, UserChangePasswordSerializer, UserLoginSerializer, UserPasswordResetSerializer, UserProfileSerializer, UserRegistrationSerializer
+from .serializers import SendPasswordResetEmailSerializer, UserChangePasswordSerializer, UserLoginSerializer, UserPasswordResetSerializer, UserProfileSerializer, UserRegistrationSerializer, UpdatePasswordSerializer
 from django.contrib.auth import authenticate, logout
 from .renderers import UserRenderer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from .models import UserProfile
+from rest_framework.parsers import MultiPartParser
+from django.core.mail import send_mail
+from django.conf import settings
 
 
 # Generate Token Manually
@@ -17,17 +20,32 @@ def get_tokens_for_user(user):
       'access': str(refresh.access_token),
   }
 
-class UserRegistrationView(APIView):
-  renderer_classes = [UserRenderer]
-  def post(self, request, format=None):
-    serializer = UserRegistrationSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    user = serializer.save()
-    token = get_tokens_for_user(user)
-    # # Store user ID and token in session
-    # request.session['user_id'] = user.id
-    # request.session['token'] = token
-    return Response({'token':token, 'success': 'true'}, status=status.HTTP_201_CREATED)
+
+class UserRegistrationAndProfileView(APIView):
+    renderer_classes = [UserRenderer]
+    parser_classes = [MultiPartParser]
+
+    def post(self, request, format=None):
+        try:
+            # User Registration
+            user_serializer = UserRegistrationSerializer(data=request.data)
+            user_serializer.is_valid(raise_exception=True)
+            user = user_serializer.save()
+
+            # UserProfile Creation
+            profile_data = {'user': user.id}
+            profile_data.update(request.data.dict())  # Convert MultiValueDict to regular dictionary
+            profile_serializer = UserProfileSerializer(data=profile_data)
+            profile_serializer.is_valid(raise_exception=True)
+            profile_serializer.save()
+
+            # Generate Token
+            token = get_tokens_for_user(user)
+            return Response({'token': token, 'success': 'true'}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class UserLoginView(APIView):
   renderer_classes = [UserRenderer]
@@ -39,10 +57,7 @@ class UserLoginView(APIView):
     user = authenticate(email=email, password=password)
     if user is not None:
       token = get_tokens_for_user(user)
-      # # Store user ID and token in session
-      # request.session['user_id'] = user.id
-      # request.session['token'] = token
-      return Response({'token':token, 'success':'true'}, status=status.HTTP_200_OK)
+      return Response({'token':token, 'success':'true', 'user_id': user.id, 'user_email': user.email}, status=status.HTTP_200_OK)
     else:
       return Response({'success':"false",'errors':{'non_field_errors':['Email or Password is not Valid']}}, status=status.HTTP_404_NOT_FOUND)
 
@@ -50,20 +65,11 @@ class UserProfileView(APIView):
 
   serializer_class = UserProfileSerializer
   permission_classes = [IsAuthenticated]
-  def get(self, request, format=None):
+  def get(self, request,format=None):
     user_profile = UserProfile.objects.get(user=request.user)
     serializer = UserProfileSerializer(user_profile)
     return Response(serializer.data, status=status.HTTP_200_OK)
   
-
-class UserProfileCreateAPIView(generics.CreateAPIView):
-    queryset = UserProfile.objects.all()
-    serializer_class = UserProfileSerializer
-    permission_classes = [IsAuthenticated]
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-        return Response({"success": "true","data": serializer.data}, status=status.HTTP_201_CREATED)
 
 class UserChangePasswordView(APIView):
   renderer_classes = [UserRenderer]
@@ -76,6 +82,8 @@ class UserChangePasswordView(APIView):
 class UserProfileUpdateAPIView(APIView):
   serializer_class = UserProfileSerializer
   permission_classes = [IsAuthenticated]
+  parser_classes = [MultiPartParser]
+
   def put(self, request, format=None):
     user_profile = UserProfile.objects.get(user=request.user)
     serializer = UserProfileSerializer(user_profile, data=request.data, partial=True)
@@ -93,6 +101,8 @@ class SendPasswordResetEmailView(APIView):
     serializer = SendPasswordResetEmailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     return Response({'msg':'Password Reset link send. Please check your Email'}, status=status.HTTP_200_OK)
+  
+
 
 class UserPasswordResetView(APIView):
   renderer_classes = [UserRenderer]
@@ -101,13 +111,22 @@ class UserPasswordResetView(APIView):
     serializer.is_valid(raise_exception=True)
     return Response({'msg':'Password Reset Successfully', "success":"true"}, status=status.HTTP_200_OK)
   
+class UpdatePasswordView(APIView):
+    permission_class = [IsAuthenticated]
+    def put(self, request, *args, **kwargs):
+        serializer = UpdatePasswordSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"success": "Password updated successfully"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LogoutView(APIView):
+  permission_class = [IsAuthenticated]
   def get(self, request, format=None):
-    if request.user.is_authenticated:
+    try:
       # Use Django's logout function
       logout(request)
       # Return a successful response
       return Response({"msg": "Successfully logged out","success":"true"}, status=status.HTTP_200_OK)
-    else:
+    except():
       return Response({"msg": "User is not logged in","success":"false"}, status=status.HTTP_401_UNAUTHORIZED)
