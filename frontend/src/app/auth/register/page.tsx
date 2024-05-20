@@ -15,6 +15,10 @@ const RegisterPage = () => {
   const [bio, setBio] = useState("");
   const [document, setDocument] = useState<File | null>(null);
   const [selfie, setSelfie] = useState<File | null>(null);
+  const [age, setAge] = useState("");
+  const [ageGroupMin, setAgeGroupMin] = useState("");
+  const [ageGroupMax, setAgeGroupMax] = useState("");
+  const [isInterestedIn, setIsInterestedIn] = useState("");
   const router = useRouter();
 
   const handleRegister = async (event: any) => {
@@ -23,35 +27,38 @@ const RegisterPage = () => {
       toast("Passwords do not match");
       return;
     } else {
-        const formData = new FormData();
-        formData.append('email', email);
-        formData.append('password', password);
-        formData.append('password2', confirmPassword);
-        formData.append('name', name);
-        formData.append('tc', "true"); // Assuming tc is a string, not boolean
-        formData.append('dob', dob);
-        formData.append('gender', gender);
-        formData.append('bio', bio);
-  
-        // Check if profilePicture, document, selfie are not null before appending
-        if (profilePicture !== null) {
-          formData.append('profilePicture', profilePicture);
-        }
-        if (document !== null) {
-          formData.append('document', document);
-        }
-        if (selfie !== null) {
-          formData.append('selfie', selfie);
-        }
+      const formData = new FormData();
+      formData.append("email", email);
+      formData.append("password", password);
+      formData.append("password2", confirmPassword);
+      formData.append("name", name);
+      formData.append("tc", "True"); // Assuming tc is a string, not boolean
+      formData.append("dob", dob);
+      formData.append("profile_picture", profilePicture);
+      formData.append("gender", gender);
+      formData.append("bio", bio);
+      formData.append("age", age);
+      formData.append("age_group_min", ageGroupMin);
+      formData.append("age_group_max", ageGroupMax);
+      formData.append("is_interested_in", isInterestedIn);
 
-        if(await register(formData))
-          {
-            toast("Registration form submitted for verification!");
-            router.push("/auth/login");
-          }
-          else{
-            toast("Error registering user");   
-          }      
+      // Check if profilePicture, document, selfie are not null before appending
+      if (profilePicture !== null) {
+        formData.append("profilePicture", profilePicture);
+      }
+      if (document !== null) {
+        formData.append("document", document);
+      }
+      if (selfie !== null) {
+        formData.append("selfie", selfie);
+      }
+
+      if (await register(formData)) {
+        toast("Registration form submitted for verification!");
+        router.push("/auth/login");
+      } else {
+        toast("Error registering user");
+      }
     }
   };
 
@@ -143,7 +150,9 @@ const RegisterPage = () => {
                 type="file"
                 accept="image/png, image/jpeg"
                 required
-                onChange={(e) => setProfilePicture(e.target.files ? e.target.files[0] : null)}
+                onChange={(e) =>
+                  setProfilePicture(e.target.files ? e.target.files[0] : null)
+                }
               />
             </div>
             <div className="mb-2">
@@ -177,7 +186,9 @@ const RegisterPage = () => {
                 type="file"
                 accept="image/png, image/jpeg"
                 required
-                onChange={(e) => setDocument(e.target.files ? e.target.files[0] : null)}
+                onChange={(e) =>
+                  setDocument(e.target.files ? e.target.files[0] : null)
+                }
               />
             </div>
             <div className="mb-2">
@@ -193,7 +204,9 @@ const RegisterPage = () => {
                 type="file"
                 accept="image/png, image/jpeg"
                 required
-                onChange={(e) => setSelfie(e.target.files ? e.target.files[0] : null)}
+                onChange={(e) =>
+                  setSelfie(e.target.files ? e.target.files[0] : null)
+                }
               />
             </div>
           </div>
@@ -255,7 +268,91 @@ const RegisterPage = () => {
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>
-
+          {/* Age */}
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div className="mb-2">
+              <label
+                htmlFor="age"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Age
+              </label>
+              <input
+                id="age"
+                name="age"
+                type="number"
+                autoComplete="age"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Age"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+              />
+            </div>
+            {/* Minimum Age */}
+            <div className="mb-2">
+              <label
+                htmlFor="age-group-min"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Minimum Age Group
+              </label>
+              <input
+                id="age-group-min"
+                name="age-group-min"
+                type="number"
+                autoComplete="age-group-min"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Minimum Age Group"
+                value={ageGroupMin}
+                onChange={(e) => setAgeGroupMin(e.target.value)}
+              />
+            </div>
+            {/* Maximum Age */}
+            <div className="mb-2">
+              <label
+                htmlFor="age-group-max"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Maximum Age Group
+              </label>
+              <input
+                id="age-group-max"
+                name="age-group-max"
+                type="number"
+                autoComplete="age-group-max"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Maximum Age Group"
+                value={ageGroupMax}
+                onChange={(e) => setAgeGroupMax(e.target.value)}
+              />
+            </div>
+            {/* Interested In */}
+            <div className="mb-2">
+              <label
+                htmlFor="is-interested-in"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Interested In
+              </label>
+              <select
+                id="is-interested-in"
+                name="is-interested-in"
+                autoComplete="is-interested-in"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                value={isInterestedIn}
+                onChange={(e) => setIsInterestedIn(e.target.value)}
+              >
+                <option value="">Select Interested In</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
           <div>
             <button
               type="submit"

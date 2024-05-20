@@ -4,6 +4,16 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Message
 from .serializers import MessageSerializer
 
+# chat/views.py
+from django.shortcuts import render
+
+
+def index(request):
+    return render(request, "chat/index.html")
+
+def room(request, room_name):
+    return render(request, "chat/room.html", {"room_name": room_name})
+
 class MessageListCreateAPIView(generics.ListCreateAPIView):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer

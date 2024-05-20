@@ -1,63 +1,70 @@
 "use client";
 
 import Post from "@/components/Posts";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaPencilAlt, FaTrash } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import Profile from "@/components/Profile";
+import { getUserPosts, deletePost } from "@/api/postsAPI";
 
 
 const Feed = () => {
-  const [profileDetails] = useState({
-    name: "John Doe",
-    profilePic: "https://randomuser.me/api/portraits/men/1.jpg",
-    // Add more profile details here
-  });
+
+  const [posts, setPosts] = useState<any>([]);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const fetchedPosts: any = await getUserPosts(); // Fetch posts from the backend API
+        if (fetchedPosts) {
+          // Update the state with the fetched posts
+          setPosts(fetchedPosts);
+        } else {
+          console.error("Failed to fetch posts");
+        }
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
+    };
+
+    fetchPosts(); // Call the fetchPosts function when the component mounts
+  },[]);
+
   const router = useRouter();
 
-  const handleEditPost = () => {
-    router.push("/dashboard/myProfile/updatePost");
+  const handleEditPost = (id:any) => {
+    router.push(`/dashboard/myProfile/updatePost/${id}`);
     console.log("Edit post");
   };
 
-  const handleDeletePost = () => {
-    // Implement delete post functionality
-    console.log("Delete post");
+  const handleDeletePost = async (id:any) => {
+    try{
+      const response = await deletePost(id);
+      console.log(response);
+      setPosts(posts.filter((post:any) => post.id !== id));
+    }
+    catch(error){
+      console.log(error);
+    }
   };
 
-  const posts = [
-    {
-      name: "John Doe",
-      profilePic: "https://randomuser.me/api/portraits/men/1.jpg",
-      caption: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-      image:
-        "https://www.onelovelylife.com/wp-content/uploads/2020/07/Toast-Ideas12B.jpg",
-    },
-    {
-      name: "Jane Smith",
-      profilePic: "https://randomuser.me/api/portraits/women/2.jpg",
-      caption:
-        "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-      image:
-        "https://www.onelovelylife.com/wp-content/uploads/2020/07/Toast-Ideas12B.jpg",
-    },
-  ];
+  console.log(posts);
 
-  return (
+   return (
     <div className="max-w-lg mx-auto mt-8">
-      <Profile {...profileDetails} />
-      {posts.map((post, index) => (
+      <Profile />
+      {posts.map((post:any) => (
         <>
-          <Post key={index} {...post}></Post>
+          <Post key={post.id} {...post}></Post>
           <div className="flex space-x-4 mb-4">
             <button
-              onClick={handleEditPost}
+              onClick={() => handleEditPost(post.id)}
               className="flex items-center text-gray-500 hover:text-gray-700"
             >
               <FaPencilAlt className="h-5 w-5 mr-1" /> Edit
             </button>
             <button
-              onClick={handleDeletePost}
+              onClick={() => handleDeletePost(post.id)}
               className="flex items-center text-red-500 hover:text-red-700"
             >
               <FaTrash className="h-5 w-5 mr-1" /> Delete

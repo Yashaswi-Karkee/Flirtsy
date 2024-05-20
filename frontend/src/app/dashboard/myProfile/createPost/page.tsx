@@ -1,15 +1,28 @@
 "use client";
 import React, { useState } from 'react';
+import { useRouter } from "next/navigation";
+import { createPost } from "@/api/postsAPI";
+
 
 const CreatePostForm = ({onCreate}:any) => {
   const [caption, setCaption] = useState('');
   const [image, setImage] = useState(null);
+  const router = useRouter();
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async(e: any) => {
     e.preventDefault();
-    onCreate({ caption, image });
-    setCaption('');
-    setImage(null);
+    // Create a new FormData object
+    const formData = new FormData();
+    formData.append('caption', caption);
+    formData.append('postPicture', image);
+    try{
+      const response = await createPost(formData);
+      console.log(response);
+      router.push("/dashboard/myProfile");
+    }
+    catch(error){
+      console.error("Error creating post:", error);
+    }
   };
 
   const handleImageChange = (e: any) => {

@@ -3,21 +3,27 @@
 import React from "react";
 
 import { useRouter } from "next/navigation";
+import { getSessionItems } from "@/utils/getSessionItems";
 
-const Profile = ({ name, profilePic }: any) => {
+const Profile = () => {
+  const session = getSessionItems();
+  console.log(session)
   const router = useRouter();
+  
   const handleCreatePost = () => {
     router.push("/dashboard/myProfile/createPost");
   };
+
+
   return (
     <div className="bg-white rounded-lg shadow-md p-4 mb-4">
       <div className="flex items-center mb-4">
         <img
-          src={profilePic}
+          src={session.avatar}
           alt="Profile"
           className="w-8 h-8 rounded-full mr-2"
         />
-        <p className="font-semibold">{name}</p>
+        {/* <p className="font-semibold">{data.name}</p> */}
       </div>
       {/* Add more profile details here */}
       <button

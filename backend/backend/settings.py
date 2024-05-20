@@ -42,7 +42,9 @@ CORS_ALLOWED_ORIGINS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'users',
+    'chat',
     'posts',
     'rest_framework',
     'drf_yasg',
@@ -60,12 +62,12 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -73,7 +75,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -85,6 +87,17 @@ TEMPLATES = [
         },
     },
 ]
+
+ASGI_APPLICATION = 'backend.asgi.application'
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
+
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
@@ -109,16 +122,6 @@ SWAGGER_SETTINGS = {
 
 CSP_CONNECT_SRC = ("'self'", "ws://localhost:8000")
 
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [('127.0.0.1', 8000)],
-        },
-    },
-}
-
-ASGI_APPLICATION = 'backend.asgi.application'
 
 
 # JWT Configuration
@@ -180,7 +183,7 @@ EMAIL_PORT = '2525'
 
 # JWT Settings
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1440),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 
     'AUTH_HEADER_TYPES': ('Bearer',),

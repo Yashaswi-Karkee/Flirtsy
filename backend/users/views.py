@@ -10,6 +10,7 @@ from .models import UserProfile
 from rest_framework.parsers import MultiPartParser
 from django.core.mail import send_mail
 from django.conf import settings
+from .matchingAlgo import find_matching_profiles
 
 
 # Generate Token Manually
@@ -26,6 +27,7 @@ class UserRegistrationAndProfileView(APIView):
     parser_classes = [MultiPartParser]
 
     def post(self, request, format=None):
+        print(request)
         try:
             # User Registration
             user_serializer = UserRegistrationSerializer(data=request.data)
@@ -43,6 +45,7 @@ class UserRegistrationAndProfileView(APIView):
             token = get_tokens_for_user(user)
             return Response({'token': token, 'success': 'true'}, status=status.HTTP_201_CREATED)
         except Exception as e:
+            print(e)
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -57,7 +60,8 @@ class UserLoginView(APIView):
     user = authenticate(email=email, password=password)
     if user is not None:
       token = get_tokens_for_user(user)
-      return Response({'token':token, 'success':'true', 'user_id': user.id, 'user_email': user.email}, status=status.HTTP_200_OK)
+      profile = user.userprofile
+      return Response({'token':token, 'success':'true', 'user_id': profile.id, 'user_email': user.email}, status=status.HTTP_200_OK)
     else:
       return Response({'success':"false",'errors':{'non_field_errors':['Email or Password is not Valid']}}, status=status.HTTP_404_NOT_FOUND)
 
@@ -70,6 +74,36 @@ class UserProfileView(APIView):
     serializer = UserProfileSerializer(user_profile)
     return Response(serializer.data, status=status.HTTP_200_OK)
   
+
+class ListUserProfileAPIView(generics.ListAPIView):
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+    print(queryset)
+
+
+
+
+class MatchingProfileAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        try:
+            # Get the user's profile
+            user_profile = request.user.userprofile
+
+            # Find matching profiles
+            matching_profiles = find_matching_profiles(user_profile)
+
+            # Serialize matching profiles
+            serializer = UserProfileSerializer(matching_profiles, many=True)
+
+            # Return the serialized data
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
 
 class UserChangePasswordView(APIView):
   renderer_classes = [UserRenderer]

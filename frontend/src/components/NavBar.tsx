@@ -18,15 +18,12 @@ function classNames(...classes: string[]) {
 export default function NavBar(userData:any) {
   const router = useRouter()
   const [currentItem, setCurrentItem] = useState('Dashboard') // Initialize with the default item
-  console.log(origin_url+userData.userData.profilePicture)
-  console.log(userData.userData)
+
   const user = {
     name: userData.userData.name,
     bio: userData.userData.bio,
-    imageUrl:
-      origin_url + userData.userData.profilePicture,
+    imageUrl: origin_url + userData.userData.profile_picture,
   }
-
   const navigation = [
       { name: 'Dashboard', action: ()=> { setCurrentItem('Dashboard'); router.push('/dashboard'); }, current: currentItem === 'Dashboard' },
       { name: 'Post', action: ()=> { setCurrentItem('Post'); router.push('/dashboard/posts'); }, current: currentItem === 'Post' },
@@ -36,7 +33,7 @@ export default function NavBar(userData:any) {
   async function signOut()
   {
     if(await logout()){
-      router.push('auth/login')
+      router.replace('auth/login')
     }
     else{
       toast("Error Logging out!")

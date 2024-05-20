@@ -1,17 +1,17 @@
 from rest_framework import serializers
 from .models import Message
-from users.serializers import UserSerializer
+from users.serializers import UserProfileSerializer
 from users.models import User
 
-class UserSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'name']
 
 
 class MessageSerializer(serializers.ModelSerializer):
-    sender = UserSerializer(read_only=True)
-    receiver = UserSerializer(read_only=True)
+    sender = UserProfileSerializer(read_only=True)
+    receiver = UserProfileSerializer(read_only=True)
 
     class Meta:
         model = Message
