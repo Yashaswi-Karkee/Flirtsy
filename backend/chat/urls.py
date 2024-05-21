@@ -5,6 +5,6 @@ from . import views
 
 
 urlpatterns = [
-    path("", views.index, name="index"),
-    path("<str:room_name>/", views.room, name="room"),
+    path("<int:id>/", views.index, name="index"),
+    path("room/<int:sender_id>/<int:receiver_id>/", views.room, name="room"),
 ]

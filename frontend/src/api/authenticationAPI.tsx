@@ -20,10 +20,9 @@ export const login = async (formData: any) => {
     const response = await axios.post(`${api_url}/user/login/`, formData, {
       headers: jsonHeader,
     });
-    console.log(response);
     window.sessionStorage.setItem("token", response.data.token.access);
-    window.sessionStorage.setItem("userId", response.data.user_id);
     window.sessionStorage.setItem("email", response.data.user_email);
+    window.sessionStorage.setItem("userId", response.data.user_id);
 
     const token = window.sessionStorage.getItem("token");
 
@@ -37,15 +36,6 @@ export const login = async (formData: any) => {
       window.sessionStorage.setItem("min_age", response1.age_group_min);
       window.sessionStorage.setItem("interestedIn", response1.is_interested_in);
       window.sessionStorage.setItem("age", response1.age);
-      console.log(
-        response1.name,
-        response1.bio,
-        avatar,
-        response1.age_group_max,
-        response1.age_group_min,
-        response1.is_interested_in,
-        response1.age
-      );
     }
     return true;
   } catch (error) {

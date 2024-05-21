@@ -1,51 +1,68 @@
-"use client"
+"use client";
 
-import { Fragment, useEffect, useState } from 'react'
-import { Disclosure, Menu, Transition } from '@headlessui/react'
-import { Bars3Icon, XMarkIcon, BellIcon } from '@heroicons/react/24/outline'
-import { PlusIcon } from '@heroicons/react/20/solid'
-import { useRouter } from 'next/navigation'
-import axios from 'axios'
-import { toast } from 'react-toastify'
-import {logout, origin_url} from "../api/authenticationAPI"
-
+import { Fragment, useEffect, useState } from "react";
+import { Disclosure, Menu, Transition } from "@headlessui/react";
+import { Bars3Icon, XMarkIcon, BellIcon } from "@heroicons/react/24/outline";
+import { PlusIcon } from "@heroicons/react/20/solid";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { logout, origin_url } from "../api/authenticationAPI";
 
 function classNames(...classes: string[]) {
-    return classes.filter(Boolean).join(' ')
+  return classes.filter(Boolean).join(" ");
 }
 
-
-export default function NavBar(userData:any) {
-  const router = useRouter()
-  const [currentItem, setCurrentItem] = useState('Dashboard') // Initialize with the default item
+export default function NavBar(userData: any) {
+  const router = useRouter();
+  const [currentItem, setCurrentItem] = useState("Dashboard"); // Initialize with the default item
+  console.log(userData.userData);
 
   const user = {
     name: userData.userData.name,
     bio: userData.userData.bio,
     imageUrl: origin_url + userData.userData.profile_picture,
-  }
+  };
   const navigation = [
-      { name: 'Dashboard', action: ()=> { setCurrentItem('Dashboard'); router.push('/dashboard'); }, current: currentItem === 'Dashboard' },
-      { name: 'Post', action: ()=> { setCurrentItem('Post'); router.push('/dashboard/posts'); }, current: currentItem === 'Post' },
-      { name: 'Chat', action: ()=> { setCurrentItem('Chat'); router.push('/dashboard/chat'); }, current: currentItem === 'Chat' },
-  ]
+    {
+      name: "Dashboard",
+      action: () => {
+        setCurrentItem("Dashboard");
+        router.push("/dashboard");
+      },
+      current: currentItem === "Dashboard",
+    },
+    {
+      name: "Post",
+      action: () => {
+        setCurrentItem("Post");
+        router.push("/dashboard/posts");
+      },
+      current: currentItem === "Post",
+    },
+    {
+      name: "Chat",
+      action: () => {
+        setCurrentItem("Chat");
+        window.location.href = `http://localhost:8000/chat/${userData.userData.id}`;
+      },
+      current: currentItem === "Chat",
+    },
+  ];
 
-  async function signOut()
-  {
-    if(await logout()){
-      router.replace('auth/login')
-    }
-    else{
-      toast("Error Logging out!")
+  async function signOut() {
+    if (await logout()) {
+      router.replace("auth/login");
+    } else {
+      toast("Error Logging out!");
     }
   }
 
-  
   const userNavigation = [
-      { name: 'Your Profile', action: () => router.push('/dashboard/myProfile') },
-      { name: 'Settings', action: () => router.push('/dashboard/setting') },
-      { name: 'Sign out', action: signOut},
-  ]
+    { name: "Your Profile", action: () => router.push("/dashboard/myProfile") },
+    { name: "Settings", action: () => router.push("/dashboard/setting") },
+    { name: "Sign out", action: signOut },
+  ];
 
   return (
     <Disclosure as="nav" className="bg-gray-800">
@@ -79,10 +96,12 @@ export default function NavBar(userData:any) {
                       key={item.name}
                       onClick={item.action}
                       className={classNames(
-                        item.current ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                        'rounded-md px-3 py-2 text-sm font-medium'
+                        item.current
+                          ? "bg-gray-900 text-white"
+                          : "text-gray-300 hover:bg-gray-700 hover:text-white",
+                        "rounded-md px-3 py-2 text-sm font-medium"
                       )}
-                      aria-current={item.current ? 'page' : undefined}
+                      aria-current={item.current ? "page" : undefined}
                     >
                       {item.name}
                     </button>
@@ -106,7 +125,11 @@ export default function NavBar(userData:any) {
                       <Menu.Button className="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
                         <span className="absolute -inset-1.5" />
                         <span className="sr-only">Open user menu</span>
-                        <img className="h-8 w-8 rounded-full" src={user.imageUrl} alt="" />
+                        <img
+                          className="h-8 w-8 rounded-full"
+                          src={user.imageUrl}
+                          alt=""
+                        />
                       </Menu.Button>
                     </div>
                     <Transition
@@ -125,8 +148,8 @@ export default function NavBar(userData:any) {
                               <button
                                 onClick={item.action}
                                 className={classNames(
-                                  active ? 'bg-gray-100' : '',
-                                  'block py-2 px-4 text-sm text-gray-700 w-full text-left'
+                                  active ? "bg-gray-100" : "",
+                                  "block py-2 px-4 text-sm text-gray-700 w-full text-left"
                                 )}
                               >
                                 {item.name}
@@ -150,10 +173,12 @@ export default function NavBar(userData:any) {
                   as="a"
                   onClick={item.action}
                   className={classNames(
-                    item.current ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                    'block rounded-md px-3 py-2 text-base font-medium'
+                    item.current
+                      ? "bg-gray-900 text-white"
+                      : "text-gray-300 hover:bg-gray-700 hover:text-white",
+                    "block rounded-md px-3 py-2 text-base font-medium"
                   )}
-                  aria-current={item.current ? 'page' : undefined}
+                  aria-current={item.current ? "page" : undefined}
                 >
                   {item.name}
                 </Disclosure.Button>
@@ -162,11 +187,19 @@ export default function NavBar(userData:any) {
             <div className="border-t border-gray-700 pb-3 pt-4">
               <div className="flex items-center px-5 sm:px-6">
                 <div className="flex-shrink-0">
-                  <img className="h-10 w-10 rounded-full" src={user.imageUrl} alt="" />
+                  <img
+                    className="h-10 w-10 rounded-full"
+                    src={user.imageUrl}
+                    alt=""
+                  />
                 </div>
                 <div className="ml-3">
-                  <div className="text-base font-medium text-white">{user.name}</div>
-                  <div className="text-sm font-medium text-gray-400">{user.bio}</div>
+                  <div className="text-base font-medium text-white">
+                    {user.name}
+                  </div>
+                  <div className="text-sm font-medium text-gray-400">
+                    {user.bio}
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -193,5 +226,5 @@ export default function NavBar(userData:any) {
         </>
       )}
     </Disclosure>
-  )
+  );
 }

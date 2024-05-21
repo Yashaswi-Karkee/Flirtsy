@@ -79,9 +79,6 @@ class ListUserProfileAPIView(generics.ListAPIView):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
-    print(queryset)
-
-
 
 
 class MatchingProfileAPIView(APIView):

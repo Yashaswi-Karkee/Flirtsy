@@ -8,3 +8,4 @@ drf-yasg
 djangorestframework-simplejwt
 channels 
 channels_redis
+scikit-learn

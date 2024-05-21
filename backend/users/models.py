@@ -37,7 +37,7 @@ class User(AbstractBaseUser):
     )
     name = models.CharField(max_length=20)
     tc = models.BooleanField()
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -72,12 +72,21 @@ class UserProfile(models.Model):
     age = models.IntegerField()
     age_group_min = models.IntegerField(default=18, validators=[MinValueValidator(18)])
     age_group_max = models.IntegerField(default=100, validators=[MaxValueValidator(100)])
+    hobbies = models.CharField(max_length=255, blank=True, default="")
+    interests = models.CharField(max_length=255, blank=True, default="")
+    
     is_interested_in = models.CharField(max_length=10, choices=[
         ('male', 'Male'),
         ('female', 'Female'),
         ('other', 'Other')
     ])
 
+    def get_hobbies_list(self):
+        return self.hobbies.split(',') if self.hobbies else []
+
+    def get_interests_list(self):
+        return self.interests.split(',') if self.interests else []
+    
     def __str__(self):
         return f"UserProfile: {self.name} "
     

@@ -19,6 +19,8 @@ const RegisterPage = () => {
   const [ageGroupMin, setAgeGroupMin] = useState("");
   const [ageGroupMax, setAgeGroupMax] = useState("");
   const [isInterestedIn, setIsInterestedIn] = useState("");
+  const [hobbies, setHobbies] = useState("");
+  const [interests, setInterests] = useState("");
   const router = useRouter();
 
   const handleRegister = async (event: any) => {
@@ -38,6 +40,8 @@ const RegisterPage = () => {
       formData.append("gender", gender);
       formData.append("bio", bio);
       formData.append("age", age);
+      formData.append("hobbies", hobbies);
+      formData.append("interests", interests);
       formData.append("age_group_min", ageGroupMin);
       formData.append("age_group_max", ageGroupMax);
       formData.append("is_interested_in", isInterestedIn);
@@ -171,6 +175,42 @@ const RegisterPage = () => {
                 placeholder="Bio"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
+              ></textarea>
+            </div>
+            <div className="mb-2">
+              <label
+                htmlFor="hobbies"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Hobbies
+              </label>
+              <textarea
+                id="hobbies"
+                name="hobbies"
+                rows={3}
+                autoComplete="hobbies"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="dancing,singing"
+                value={hobbies}
+                onChange={(e) => setHobbies(e.target.value)}
+              ></textarea>
+            </div>
+            <div className="mb-2">
+              <label
+                htmlFor="interests"
+                className="block text-sm font-medium leading-6 text-gray-900"
+              >
+                Interests
+              </label>
+              <textarea
+                id="interests"
+                name="interests"
+                rows={3}
+                autoComplete="interests"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="tall,handsome"
+                value={interests}
+                onChange={(e) => setInterests(e.target.value)}
               ></textarea>
             </div>
             <div className="mb-2">
